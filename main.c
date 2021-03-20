@@ -32,9 +32,8 @@ int Clamp(int i) {
 }
 
 /* Stole this from the internet somewhere */
-void HsvToRgb(double h, double S, double V, Color *c) {    
-    double H = h;
-    double R, G, B;
+void HsvToRgb(real H, real S, real V, Color *c) {    
+    real R, G, B;
 
     /* while (H < 0) { H += 360; }; */
     /* while (H >= 360) { H -= 360; }; */
@@ -44,12 +43,12 @@ void HsvToRgb(double h, double S, double V, Color *c) {
     } else if (S <= 0) {
         R = G = B = V;
     } else {
-        double hf = H / 60.0;
+        real hf = H / 60.0;
         int i = (int)hf;
-        double f = hf - i;
-        double pv = V * (1 - S);
-        double qv = V * (1 - S * f);
-        double tv = V * (1 - S * (1 - f));
+        real f = hf - i;
+        real pv = V * (1 - S);
+        real qv = V * (1 - S * f);
+        real tv = V * (1 - S * (1 - f));
         switch (i) {
         case 0:
             R = V;
@@ -115,8 +114,8 @@ void set_pixel(SDL_Surface *surface, int x, int y, uint32_t pixel) {
 }
 
 void mandelbrot(const SDL_Rect *view) {
-    int       x, y;
-    real      xstart, xend, ystart, yend;
+    int   x, y;
+    real  xstart, xend, ystart, yend;
 
     if (texture) {
         SDL_DestroyTexture(texture);
@@ -129,12 +128,12 @@ void mandelbrot(const SDL_Rect *view) {
     
     for (y = 0; y < height; ++y) {
         for (x = 0; x < width; ++x) {
-            Color     color;
-            double    h, s, v;
-            real      x0, y0, x2, y2, xx, yy;
-            int       iteration;
+            Color  color;
+            real   h, s, v;
+            real   x0, y0, x2, y2, xx, yy;
+            int    iteration;
             
-            double    c;
+            real   c;
 
             x0 = map(x, 0, width, xstart, xend);
             y0 = map(y, 0, height, ystart, yend);
@@ -168,8 +167,6 @@ void mandelbrot(const SDL_Rect *view) {
 
             HsvToRgb(h, s, v, &color);
 
-            color.rgb[3] = 255;
-                
             set_pixel(surface, x, y, color.color);
         }
     }
@@ -178,14 +175,14 @@ void mandelbrot(const SDL_Rect *view) {
 }
 
 int main(int argc, char **argv) {
-    bool          running, test, escape;
+    bool         running, test, escape;
 
-    SDL_Window   *window;
-    SDL_Rect      rectangle, view;
-    SDL_Event     event;
+    SDL_Window  *window;
+    SDL_Rect     rectangle, view;
+    SDL_Event    event;
 
-    uint32_t      rmask, gmask, bmask, amask, mouse;
-    int           mx, my;
+    uint32_t     rmask, gmask, bmask, amask, mouse;
+    int          mx, my;
 
     running = true;
     test = true;
