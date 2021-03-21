@@ -5,20 +5,29 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include <stdbool.h>
 #include <time.h>
 
 typedef long double real;
 
-const int max_iteration = 500;
-const real scale = 4.0;
+const int window_width = 1280;
+const int window_height = 720;
 
-int width = 1280 * scale;
-int height = 720 * scale;
+bool is_high_quality = false;
+
+int max_iteration;
+real scale;
+
+int width, height;
 
 SDL_Texture *texture;
 SDL_Surface *surface;
 SDL_Renderer *renderer;
+
+typedef struct {
+    real x, y, w, h;
+} Rectangle;
 
 typedef union {
     uint8_t rgb[4];
@@ -113,7 +122,7 @@ void set_pixel(SDL_Surface *surface, int x, int y, uint32_t pixel) {
     *target_pixel = pixel;
 }
 
-void mandelbrot(const SDL_Rect *view) {
+void mandelbrot(const Rectangle *view) {
     int   x, y;
     real  xstart, xend, ystart, yend;
 
@@ -178,19 +187,35 @@ int main(int argc, char **argv) {
     bool         running, test, escape;
 
     SDL_Window  *window;
-    SDL_Rect     rectangle, view;
+    Rectangle    rectangle, view;
     SDL_Event    event;
 
     uint32_t     rmask, gmask, bmask, amask, mouse;
     int          mx, my;
 
+    if (argc == 2) {
+        if (0==strcmp(argv[1], "-high")) is_high_quality = true;
+        if (0==strcmp(argv[1], "-low")) is_high_quality = false;
+    }
+
+    if (is_high_quality) {
+        max_iteration = 750;
+        scale = 4.0;
+    } else {
+        max_iteration = 500;
+        scale = 1.0;
+    }
+
+    width = window_width * scale;
+    height = window_height * scale;
+    
     running = true;
     test = true;
     escape = false;
     
     SDL_Init(SDL_INIT_EVERYTHING);
     IMG_Init(IMG_INIT_PNG);
-    
+
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
     
     window = SDL_CreateWindow("Mandelbrot",
@@ -247,6 +272,18 @@ int main(int argc, char **argv) {
                     
                     IMG_SavePNG(surface, str);
                 }
+                if (event.key.keysym.sym == SDLK_t) {
+                    is_high_quality = !is_high_quality;
+
+                    if (is_high_quality) {
+                        max_iteration = 1000;
+                        scale = 4.0;
+                        width = 1280 * scale;
+                        height = 720 * scale;
+
+                        mandelbrot(&view);
+                    }
+                }
             }
         }
 
@@ -290,13 +327,20 @@ int main(int argc, char **argv) {
         }
         
         if (rectangle.x != -1) {
+            const SDL_Rect rec = {
+                (int) rectangle.x,
+                (int) rectangle.y,
+                (int) rectangle.w,
+                (int) rectangle.h
+            };
+            
             rectangle.x /= scale;
             rectangle.y /= scale;
             rectangle.w /= scale;
             rectangle.h /= scale;
 
             SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-            SDL_RenderDrawRect(renderer, &rectangle);
+            SDL_RenderDrawRect(renderer, &rec);
 
             rectangle.x *= scale;
             rectangle.y *= scale;
